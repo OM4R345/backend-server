@@ -5,3 +5,4 @@ build/
 cli-tools/
 *.pem
 test.js
+photos/

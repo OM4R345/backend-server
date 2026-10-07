@@ -111,6 +111,11 @@ const deleteUser = async (req, res, next) => {
       ? req.params.email
       : `${req.params.email}@gmail.com`;
 
+    if (email === req.decoded.email)
+      return res
+        .status(400)
+        .json({ status: "fail", message: "you can't delete yourself" });
+
     const action = await User.deleteUser({ email: email });
     if (!action) {
       return res
