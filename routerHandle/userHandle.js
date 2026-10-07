@@ -1,11 +1,11 @@
 const fs = require("node:fs");
-const privateKey = fs.readFileSync("./private.pem", "utf-8");
-const publicKey = fs.readFileSync("./public.pem", "utf-8");
 const { User } = require("../database.js");
 const { v4: uuidv4 } = require("uuid");
 const { signToken } = require("../middleware/jwt.js");
 const { pwToHash, compareHash } = require("../password.js");
 const { saveOnDisk } = require("../middleware/photo.js");
+const privateKey = fs.readFileSync("./private.pem", "utf-8");
+const publicKey = fs.readFileSync("./public.pem", "utf-8");
 
 const login = async (req, res, next) => {
   try {
@@ -63,7 +63,7 @@ const login = async (req, res, next) => {
 const signUp = (loginMiddleware) => {
   return async (req, res, next) => {
     try {
-      const { name, age, email, password, role } = req.body;
+      const { name, age, email, password } = req.body;
 
       const checkedPassword =
         /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@.#$!%*?&])[A-Za-z\d@.#$!%*?&]{8,15}$/.test(
@@ -83,7 +83,6 @@ const signUp = (loginMiddleware) => {
         age,
         email,
         password: await pwToHash(password),
-        role,
         avatar: saveAvatar.next().value,
       });
 

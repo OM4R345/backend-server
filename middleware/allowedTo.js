@@ -15,7 +15,7 @@ const allowedTo = (...roles) => {
         throw new Error();
       }
     } catch (err) {
-      return res.status(406).json({
+      return res.status(403).json({
         status: "fail",
         data: null,
         message: "you are not acceptable",

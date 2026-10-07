@@ -1,14 +1,5 @@
 const mongoose = require("mongoose");
 const createdOwner = require("./middleware/createOwner.js");
-mongoose
-  .connect(process.env.MONGODB_URI)
-  .then(() => {
-    console.log("Database is Connection");
-  })
-  .catch((err) => {
-    console.log(err);
-    process.exit(1);
-  });
 
 const userScheme = mongoose.Schema(
   {
@@ -37,8 +28,6 @@ const userScheme = mongoose.Schema(
   },
   { timestamps: true },
 );
-
-await createdOwner(userScheme);
 
 userScheme.statics.createObjectId = function () {
   return new mongoose.Types.ObjectId();
@@ -110,7 +99,7 @@ userScheme.statics.searchUser = async function (params) {
   }
 };
 
-userScheme.statics.getAllUsers = async () => {
+userScheme.statics.getAllUsers = async function () {
   try {
     const data = await this.find({});
     return data;
@@ -189,6 +178,17 @@ productScheme.statics.getProducts = async function ({
 const User = mongoose.models.User || mongoose.model("User", userScheme);
 const Product =
   mongoose.models.Product || mongoose.model("Product", productScheme);
+
+mongoose
+  .connect(process.env.MONGODB_URI)
+  .then(async () => {
+    console.log("Database is Connection");
+    await createdOwner(User);
+  })
+  .catch((err) => {
+    console.log(err);
+    process.exit(1);
+  });
 
 module.exports = {
   User,

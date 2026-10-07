@@ -56,7 +56,11 @@ const getAvatar = (filename) => {
       const targetFile = filename || req.params.photoName;
       if (!targetFile) throw new Error("filename and photoName are undefined");
 
-      const filePath = path.basename(__dirname, "../photos", targetFile);
+      const filePath = path.join(
+        __dirname,
+        "../photos",
+        path.basename(targetFile),
+      );
 
       if (!fs.existsSync(filePath)) {
         const defaultPath = path.join(

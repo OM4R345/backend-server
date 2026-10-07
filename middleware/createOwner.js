@@ -1,4 +1,4 @@
-const { pwToHash } = require("../password.js");
+const { pwToHash } = require("./password.js");
 
 const createdOwner = async (schema) => {
   try {
