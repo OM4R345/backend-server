@@ -11,7 +11,7 @@ const { verifyToken } = require("./middleware/jwt.js");
 app.use(express.json());
 
 app.use("/user", userHandle);
-app.use("/products", verifyToken(), allowedTo("admin", "awner"), productHandle);
+app.use("/products", verifyToken(), allowedTo("admin", "owner"), productHandle);
 app.get("/photo/:photoName", getAvatar());
 
 app.listen(port, () => {

@@ -110,8 +110,15 @@ const deleteUser = async (req, res, next) => {
     const email = req.params.email?.includes("@gmail.com")
       ? req.params.email
       : `${req.params.email}@gmail.com`;
+
     const action = await User.deleteUser({ email: email });
-    res.status(200).json({ status: "success", data: action });
+    if (!action) {
+      return res
+        .status(404)
+        .json({ status: "fail", message: "user not found" });
+    }
+
+    return res.status(200).json({ status: "success", data: action });
   } catch (err) {
     next(err);
   }

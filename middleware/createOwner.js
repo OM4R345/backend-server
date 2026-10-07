@@ -1,4 +1,4 @@
-const { pwToHash } = require("./password.js");
+const { pwToHash } = require("../password.js");
 
 const createdOwner = async (schema) => {
   try {
@@ -14,7 +14,12 @@ const createdOwner = async (schema) => {
         role: "owner",
         avatar: process.env.OWNER_AVATAR,
       });
-      console.log(`Done create owner: ${process.env.OWNER_EMAIL}`);
+
+      const username = ownerEmail.split("@")[0];
+      const host = ownerEmail.split("@")[1];
+      const finalName = `${username[0]}${"*".repeat(username.length - 3)}${username.slice(username.length - 2)}@${host}`;
+
+      console.log(`Done create owner: ${finalName}`);
     }
   } catch (err) {
     console.error(err);
