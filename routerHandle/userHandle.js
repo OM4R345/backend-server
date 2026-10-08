@@ -66,7 +66,7 @@ const signUp = (loginMiddleware) => {
       const { name, age, email, password } = req.body;
 
       const checkedPassword =
-        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@.#$!%*?&])[A-Za-z\d@.#$!%*?&]{8,15}$/.test(
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@.#$!%*?&])[A-Za-z\d@.#$!%*?&]{8,30}$/.test(
           password,
         );
       if (!checkedPassword) {
