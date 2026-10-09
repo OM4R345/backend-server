@@ -1,7 +1,7 @@
 const express = require("express");
 const app = express();
 const port = 3000;
-require("dotenv").config();
+require("dotenv").config({ quiet: true });
 const userHandle = require("./routerHandle.js");
 const productHandle = require("./routerHandle/productsHandle.js");
 const { getAvatar } = require("./middleware/photo.js");

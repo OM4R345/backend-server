@@ -1,65 +1,56 @@
 const { z } = require("zod");
 
-module.exports = vaildator = (req, res, next) => {
-  const { name, age, email, password, confirmPw } = req.body;
+const emailField = z
+  .string({ message: "email is required" })
+  .trim()
+  .toLowerCase()
+  .email("invalid email");
 
-  const userScheme = z.object({
+const schemas = {
+  "post /user/sign-up": z.strictObject({
     name: z
-      .string({ required_error: "name is required" })
-      .min(5, "name is short than 5 chars")
+      .string({ message: "name is required" })
+      .trim()
+      .min(3, "name is short than 3 chars")
       .max(30, "name is too long"),
-    age: z
-      .number({ required_error: "age is required" })
-      .positive()
+    age: z.coerce
+      .number({ message: "age must be a number" })
+      .int()
       .gte(16, "you are younger than 16 years"),
-    email: z.string({ required_error: "email is required" }).email(),
+    email: emailField,
     password: z
-      .string({ required_error: "password is required" })
-      .regex(
-        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@.#$!%*?&])[A-Za-z\d@.#$!%*?&]{8,30}$/,
-        "password is weak, use [A-z], [a-z], [0-9] and [@.#$!%*?&]",
-      ),
-  });
+      .string({ message: "password is required" })
+      .min(8, "password is too short")
+      .max(72, "password is too long")
+      .regex(/[a-z]/, "add a lowercase letter")
+      .regex(/[A-Z]/, "add an uppercase letter")
+      .regex(/\d/, "add a number")
+      .regex(/[^A-Za-z0-9]/, "add a symbol"),
+  }),
+  "post /user/login": z.strictObject({
+    email: emailField,
+    password: z.string({ message: "password is required" }).min(8),
+  }),
+};
 
-  const loginScheme = userScheme
-    .pick({
-      email: true,
-      password: true,
-    })
-    .extend({
-      confirmPw: z.string({ required_error: "confirm password is wrong" }),
-    })
-    .refine((v) => v.password === v.confirmPw, {
-      message: "confirm password is wrong",
-      path: ["confirmPw"],
+module.exports = validate = (req, res, next) => {
+  const key = `${req.method} ${req.baseUrl}${req.path}`
+    .replace(/\/+$/, "")
+    .toLowerCase();
+  const schema = schemas[key];
+  if (!schema) return next();
+
+  const result = schema.safeParse(req.body ?? {});
+
+  if (!result.success) {
+    return res.status(400).json({
+      status: "fail",
+      errors: result.error.issues.map((i) => ({
+        field: i.path.join(".") || (i.keys ? i.keys.join(", ") : ""),
+        message: i.message,
+      })),
     });
-
-  const path = req.url.split("/");
-  if (path.includes("login")) {
-    const result = userScheme.safeParse(req.body);
-
-    if (!result.success) {
-      const formattedErrors = result.error.issues.map((issue) => ({
-        field: issue.path.join("."),
-        message: issue.message,
-      }));
-      return res
-        .status(400)
-        .json({ status: "fail", message: formattedErrors.message });
-    }
-    next();
-  } else if (path.includes("sign-up")) {
-    const result = loginScheme.safeParse(req.body);
-
-    if (!result.success) {
-      const formattedErrors = result.error.issues.map((issue) => ({
-        field: issue.path.join("."),
-        message: issue.message,
-      }));
-      return res
-        .status(400)
-        .json({ status: "fail", message: formattedErrors.message });
-    }
-    next();
   }
+  req.body = result.data;
+  next();
 };

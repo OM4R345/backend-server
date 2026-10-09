@@ -10,11 +10,6 @@ const publicKey = fs.readFileSync("./public.pem", "utf-8");
 const login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
-    if (!email || !password) {
-      return res
-        .status(400)
-        .json({ status: "fail", message: "provide email and password" });
-    }
 
     const returnedData = await User.getUser(email);
     if (!returnedData) {
@@ -65,17 +60,6 @@ const signUp = (loginMiddleware) => {
     try {
       const { name, age, email, password } = req.body;
 
-      const checkedPassword =
-        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@.#$!%*?&])[A-Za-z\d@.#$!%*?&]{8,30}$/.test(
-          password,
-        );
-      if (!checkedPassword) {
-        return res.status(400).json({
-          status: "fail",
-          message: "password is weak, use [A-z], [a-z], [0-9] and [@.#$!%*?&]",
-        });
-      }
-
       const saveAvatar = saveOnDisk(req.file);
 
       const { createdUser } = await User.createUser({
@@ -92,7 +76,6 @@ const signUp = (loginMiddleware) => {
 
       return loginMiddleware(req, res, next);
     } catch (err) {
-      console.log(err);
       if (err.code === 11000) {
         return res.status(400).json({
           status: "fail",
