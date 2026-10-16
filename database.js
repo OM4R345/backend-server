@@ -49,8 +49,8 @@ userScheme.statics.createUser = async function (data) {
     };
 
     const createdUser = await this.create(userData);
-
-    return { createdUser };
+    const { password, __v, _id, updatedAt, ...cleanData } = data;
+    return { data, cleanData };
   } catch (err) {
     throw err;
   }
@@ -58,13 +58,13 @@ userScheme.statics.createUser = async function (data) {
 
 userScheme.statics.getUser = async function (email) {
   try {
-    const data = await this.findOne({ email: email });
+    const data = await this.findOne({ email: email }).lean();
 
     if (!data) {
       return null;
     }
 
-    const { password, __v, _id, updatedAt, ...cleanData } = data.toObject();
+    const { password, __v, _id, updatedAt, ...cleanData } = data;
     return { userData: data, cleanData };
   } catch (err) {
     throw err;
@@ -73,12 +73,12 @@ userScheme.statics.getUser = async function (email) {
 
 userScheme.statics.getUserById = async function (userID) {
   try {
-    const data = await this.findById(userID);
+    const data = await this.findById(userID).lean();
     if (!data) {
       return null;
     }
 
-    const { password, __v, _id, updatedAt, ...cleanData } = data.toObject();
+    const { password, __v, _id, updatedAt, ...cleanData } = data;
     return { data, cleanData };
   } catch (err) {
     throw err;
@@ -87,12 +87,12 @@ userScheme.statics.getUserById = async function (userID) {
 
 userScheme.statics.searchUser = async function (params) {
   try {
-    const data = await this.findOne(params);
+    const data = await this.findOne(params).lean();
     if (!data) {
       return null;
     }
 
-    const { password, __v, _id, updatedAt, ...cleanData } = data.toObject();
+    const { password, __v, _id, updatedAt, ...cleanData } = data;
     return { data, cleanData };
   } catch (err) {
     throw err;
@@ -101,7 +101,7 @@ userScheme.statics.searchUser = async function (params) {
 
 userScheme.statics.getAllUsers = async function () {
   try {
-    const data = await this.find({});
+    const data = await this.find({}).lean();
     return data;
   } catch (err) {
     throw err;
@@ -113,7 +113,7 @@ userScheme.statics.deleteUserById = async function (userId) {
     if (!mongoose.isValidObjectId(userId)) {
       throw err;
     }
-    const data = await this.findOneAndDelete({ _id: userId }).then();
+    const data = await this.findOneAndDelete({ _id: userId }).lean();
     if (data) {
       return data;
     }
@@ -124,10 +124,34 @@ userScheme.statics.deleteUserById = async function (userId) {
 
 userScheme.statics.deleteUser = async function (filter) {
   try {
-    const data = await this.findOneAndDelete(filter);
+    const data = await this.findOneAndDelete(filter).lean();
     if (data) {
       return data;
     }
+  } catch (err) {
+    throw err;
+  }
+};
+
+userScheme.statics.setData = async function (email, data) {
+  try {
+    if (!data || !email) {
+      return new Error(
+        `${data == undefined || data == 0 ? '"New data"' : '"User email"'} is required to set data.`,
+      );
+    }
+    const _data = await this.findOneAndUpdate(
+      { email },
+      { $set: data },
+      { returnDocument: "after", runValidators: true },
+    ).lean();
+
+    if (!_data) {
+      return null;
+    }
+
+    const { password, __v, _id, updatedAt, ...cleanData } = _data;
+    return { data, cleanData };
   } catch (err) {
     throw err;
   }
@@ -175,6 +199,8 @@ productScheme.statics.getProducts = async function ({
   };
 };
 
+//==================================================================\\
+//==================================================================\\
 const User = mongoose.models.User || mongoose.model("User", userScheme);
 const Product =
   mongoose.models.Product || mongoose.model("Product", productScheme);
@@ -186,11 +212,14 @@ mongoose
     await createdOwner(User);
   })
   .catch((err) => {
-    console.log(err);
+    console.log(err.message);
     process.exit(1);
   });
+
+const closeConnection = () => mongoose.connection.close(false);
 
 module.exports = {
   User,
   Product,
+  closeConnection,
 };

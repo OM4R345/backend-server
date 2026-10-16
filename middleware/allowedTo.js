@@ -3,13 +3,13 @@ const allowedTo = (...roles) => {
     try {
       const lowerRoles = roles.map((value) => value.toLowerCase());
       const role = req.decoded.role.toLowerCase();
-      if (!roles) {
+      if (!roles || (lowerRoles.includes("all") && lowerRoles.length > 1)) {
         return res
           .status(403)
           .json({ status: "fail", message: "roles is required" });
       }
 
-      if (lowerRoles.includes(role)) {
+      if (lowerRoles.includes(role) || lowerRoles.includes("all")) {
         next();
       } else {
         throw new Error();
@@ -17,7 +17,6 @@ const allowedTo = (...roles) => {
     } catch (err) {
       return res.status(403).json({
         status: "fail",
-        data: null,
         message: "you are not acceptable",
       });
     }

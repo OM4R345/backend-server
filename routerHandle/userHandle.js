@@ -105,11 +105,83 @@ const deleteUser = async (req, res, next) => {
         .status(404)
         .json({ status: "fail", message: "user not found" });
     }
-
     return res.status(200).json({ status: "success", data: action });
   } catch (err) {
     next(err);
   }
 };
 
-module.exports = { login, signUp, deleteUser };
+const resetPw = async (req, res, next) => {
+  try {
+    const email = req.decoded.email;
+    const newPassword = req.body.newPassword.trim();
+    const confirmPw = req.body.confirmPw.trim();
+
+    if (newPassword !== confirmPw) {
+      return res
+        .status(400)
+        .json({ status: "fail", message: "confirm Password is wrong" });
+    }
+
+    const hashedPw = await pwToHash(newPassword);
+    const data = await User.setData(email, {
+      password: hashedPw,
+    });
+    return res.status(200).json({ status: "success", data: data.cleanData });
+  } catch (err) {
+    next(err);
+  }
+};
+
+const changeEmail = async (req, res, next) => {
+  try {
+    const email = req.decoded.email;
+    const newEmail = req.body.newEmail?.trim();
+
+    if (!newEmail) {
+      return res
+        .status(400)
+        .json({ status: "fail", message: "Email is required" });
+    }
+
+    const checkEmail = await User.getUser(newEmail);
+    if (checkEmail !== null) {
+      return res.status(400).json({ status: "fail", message: "Email is used" });
+    }
+
+    const data = await User.setData(email, { email: newEmail });
+    return res.status(200).json({ status: "success", data: data.cleanData });
+  } catch (err) {
+    next(err);
+  }
+};
+
+const editData = async (req, res, next) => {
+  try {
+    const email = req.decoded.email;
+    const payload = {};
+    const allowedFields = ["name", "age"];
+
+    for (const field of allowedFields) {
+      if (req.body[field] !== undefined && req.body[field] != "") {
+        payload[field] = req.body[field];
+      }
+    }
+
+    if (Object.keys(payload).length === 0) {
+      return res
+        .status(400)
+        .json({ status: "fail", message: "New data is required" });
+    }
+
+    const data = await User.setData(email, payload);
+    if (!data) {
+      throw new Error();
+    }
+    return res.status(200).json({ status: "success", data: data.cleanData });
+  } catch (err) {
+    next(err);
+  }
+};
+
+module.exports = { login, signUp, deleteUser, changeEmail, editData, resetPw };
