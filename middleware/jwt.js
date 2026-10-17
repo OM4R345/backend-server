@@ -1,31 +1,38 @@
 const jwt = require("jsonwebtoken");
-const fs = require("node:fs");
-const genKeys = require("../genKeys.js");
+const jwksClient = require("jwks-rsa");
 const { v4: uuidv4 } = require("uuid");
 
-let readedPublicKey = "";
-if (!fs.existsSync("./public.pem")) {
-  readedPublicKey = genKeys();
-} else {
-  readedPublicKey = fs.readFileSync("./public.pem", "utf-8");
-}
+const providers = {
+  "https://accounts.google.com": jwksClient({
+    jwksUri: "https://www.googleapis.com/oauth2/v3/certs",
+  }),
+  "http://localhost:3000": jwksClient({
+    jwksUri: "http://localhost:4000/.well-known/jwks.json",
+    cache: true,
+    rateLimit: true,
+    jwksRequestsPerMinute: 10,
+  }),
+};
 
 const signToken = async (data, privateKey, options) => {
   const defaultOptions = {
     algorithm: "RS256",
+    keyid: "kid-v1",
     jwtid: uuidv4(),
     expiresIn: 10 * 60,
     ...options,
   };
 
-  if (!data && !privateKey) {
-    throw new Error("Data and privateKey are required for signing token");
+  if (!data || !privateKey) {
+    throw new Error(
+      `${data ? "PublicKey" : "User data"} is required for signing token`,
+    );
   }
 
   return jwt.sign(data, privateKey, defaultOptions);
 };
 
-const verifyToken = (token, options, publicKey) => {
+const verifyToken = (token, options) => {
   return (req, res, next) => {
     const Token = token || req.headers.authorization?.split(" ")[1];
     if (!Token) {
@@ -35,25 +42,41 @@ const verifyToken = (token, options, publicKey) => {
     }
 
     const defaultOptions = {
-      algorithm: "RS256",
+      algorithms: ["RS256"],
       ...options,
     };
 
-    jwt.verify(
-      Token,
-      publicKey || readedPublicKey,
-      defaultOptions,
-      (err, decoded) => {
-        if (err) {
-          const message =
-            err.name === "TokenExpiredError" ? "jwt expired" : "invalid token";
+    const unverifiedToken = jwt.decode(Token, {
+      complete: true,
+    });
+    const issuer = unverifiedToken?.payload?.iss;
+    const client = providers[issuer];
 
-          return res.status(401).json({ status: "fail", message: message });
-        }
-        req.decoded = decoded;
-        next();
-      },
-    );
+    if (!client) {
+      return res.status(401).json({
+        status: "fail",
+        message: "unsupported issuer",
+      });
+    }
+
+    const getKey = (header, callback) => {
+      client.getSigningKey(header.kid, (err, key) => {
+        if (err) return callback(err);
+
+        callback(null, key.getPublicKey());
+      });
+    };
+
+    jwt.verify(Token, getKey, defaultOptions, (err, decoded) => {
+      if (err) {
+        const message =
+          err.name === "TokenExpiredError" ? "jwt expired" : "invalid token";
+
+        return res.status(401).json({ status: "fail", message: message });
+      }
+      req.decoded = decoded;
+      next();
+    });
   };
 };
 

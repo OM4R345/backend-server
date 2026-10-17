@@ -14,7 +14,12 @@ app.use(express.json());
 app.use(helmet());
 
 app.use("/user", userHandle);
-app.use("/products", verifyToken(), allowedTo("admin", "owner"), productHandle);
+app.use(
+  "/products",
+  verifyToken(),
+  allowedTo("all" /* "admin", "owner" */),
+  productHandle,
+);
 app.get("/photo/:photoName", getAvatar());
 
 const server = app.listen(port, () => {

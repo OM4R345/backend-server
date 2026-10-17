@@ -22,7 +22,6 @@ const login = async (req, res, next) => {
     if (!(await compareHash(password, userData.password))) {
       res.status(401).json({
         status: "fail",
-        data: null,
         message: "invalid email or password",
       });
       return;

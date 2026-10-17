@@ -18,6 +18,11 @@ const genKeys = () => {
   fs.writeFileSync(path.join(__dirname, "/public.pem"), publicKey);
   fs.writeFileSync(path.join(__dirname, "/private.pem"), privateKey);
 
+  const epPath = "../endpoint-server/public.pem";
+  if (fs.existsSync(path)) {
+    fs.writeFileSync(path.join(__dirname, epPath), publicKey);
+  }
+
   return publicKey;
 };
 
