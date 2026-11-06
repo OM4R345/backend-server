@@ -2,7 +2,7 @@ node_modules/
 .env
 dist/
 build/
-cli-tools/
+.test/
 *.pem
 test.js
 photos/

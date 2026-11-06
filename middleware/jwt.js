@@ -1,6 +1,8 @@
 const jwt = require("jsonwebtoken");
 const jwksClient = require("jwks-rsa");
-const { v4: uuidv4 } = require("uuid");
+const fs = require("node:fs");
+const crypto = require("crypto");
+const missingParams = require("../errorHandle/err.missingParams");
 
 const providers = {
   "https://accounts.google.com": jwksClient({
@@ -14,18 +16,35 @@ const providers = {
   }),
 };
 
+/* const checkPrivate = fs.existsSync("../private.pem");
+const checkPublic = fs.existsSync("../public.pem");
+
+if (!checkPrivate || !checkPublic) {
+  console.error(
+    `Cannot find ${
+      !checkPrivate && !checkPrivate
+        ? "private and public Keys"
+        : !checkPrivate
+          ? "Private Key"
+          : "Public Key"
+    }`,
+  );
+  process.exit(1);
+  //require("../genKeys")();
+}  */
+
 const signToken = async (data, privateKey, options) => {
   const defaultOptions = {
     algorithm: "RS256",
     keyid: "kid-v1",
-    jwtid: uuidv4(),
+    jwtid: crypto.randomUUID(),
     expiresIn: 10 * 60,
     ...options,
   };
 
   if (!data || !privateKey) {
     throw new Error(
-      `${data ? "PublicKey" : "User data"} is required for signing token`,
+      `${missingParams({ data, privateKey })} is required for signing token`,
     );
   }
 
@@ -62,7 +81,6 @@ const verifyToken = (token, options) => {
     const getKey = (header, callback) => {
       client.getSigningKey(header.kid, (err, key) => {
         if (err) return callback(err);
-
         callback(null, key.getPublicKey());
       });
     };

@@ -1,4 +1,4 @@
-const { closeConnection } = require("./database.js");
+const { closeConnection } = require("../database/database.js");
 let shuttingDown = false;
 
 const handleShutdown = async (signal, server) => {
@@ -10,10 +10,11 @@ const handleShutdown = async (signal, server) => {
     console.error(
       "Couldn't close connections in time. Forcefull shutting down.",
     );
+    process.exit(1);
   }, 20000);
   forcetimer.unref();
 
-  const services = [{ name: "mongoDB", close: () => closeConnection }];
+  const services = [{ name: "mongoDB", close: () => closeConnection() }];
 
   server.close(async () => {
     console.log("HTTP server closed. No new requests accepted.");

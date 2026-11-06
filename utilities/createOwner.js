@@ -1,12 +1,13 @@
-const { pwToHash } = require("../password.js");
+const { User } = require("../database/database.js");
+const { pwToHash } = require("./password.js");
 
-const createdOwner = async (schema) => {
+const createdOwner = async () => {
   try {
     const ownerEmail = process.env.OWNER_EMAIL;
-    const ownerExists = await schema.findOne({ email: ownerEmail });
+    const ownerExists = await User.findOne({ email: ownerEmail });
 
     if (!ownerExists) {
-      await schema.create({
+      await User.create({
         name: process.env.OWNER_NAME,
         age: process.env.OWNER_AGE,
         email: ownerEmail,

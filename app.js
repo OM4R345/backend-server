@@ -1,26 +1,25 @@
 const express = require("express");
 const app = express();
-const port = 3000;
+const port = process.env.PORT;
 require("dotenv").config({ quiet: true });
 const userHandle = require("./routerHandle.js");
-const productHandle = require("./routerHandle/productsHandle.js");
-const { getAvatar } = require("./middleware/photo.js");
+const { getProducts } = require("./routers/productHandle.js");
 const allowedTo = require("./middleware/allowedTo");
 const { verifyToken } = require("./middleware/jwt.js");
-const handleShutdown = require("./shutdown.js");
+const handleShutdown = require("./utilities/shutdown.js");
 const helmet = require("helmet");
 
 app.use(express.json());
 app.use(helmet());
 
 app.use("/user", userHandle);
-app.use(
-  "/products",
-  verifyToken(),
-  allowedTo("all" /* "admin", "owner" */),
-  productHandle,
-);
-app.get("/photo/:photoName", getAvatar());
+app.use("/products", verifyToken(), allowedTo("all"), getProducts);
+
+app.use((req, res) => {
+  res
+    .status(404)
+    .json({ status: "fail", message: `Page {${req.originalUrl}} not found.` });
+});
 
 const server = app.listen(port, () => {
   console.log(`Server listen on port ${port}`);
