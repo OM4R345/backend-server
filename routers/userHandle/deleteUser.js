@@ -1,7 +1,7 @@
 const { User } = require("../../database/database.js");
 const toPublicData = require("../../utilities/toPublicData.js");
 const path = require("node:path");
-const { rm } = require("node:fs/promises");
+const { removePhoto } = require("../../middleware/photo/photo.js");
 
 const deleteUser = (self = true) => {
   return async (req, res, next) => {
@@ -23,6 +23,7 @@ const deleteUser = (self = true) => {
         action = await User.searchUser({ _id: req.decoded.sub });
         if (action && !defaultAvatars.has(action.avatar)) {
           setTimeout(await User.deleteUserById(req.decoded.sub), 3000).unref();
+          removePhoto(action.avatar);
         } else {
           return res
             .status(404)
@@ -38,9 +39,7 @@ const deleteUser = (self = true) => {
 
         if (action) { 
          if(action.avatar && !defaultAvatars.has(action.avatar)) {
-          rm(
-            path.join(__dirname, "../../photos", path.basename(action.avatar)),
-          ).catch((err) => next(err));
+          removePhoto(action.avatar);
          }
         } else {
           return res
