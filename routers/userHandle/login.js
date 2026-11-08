@@ -17,7 +17,11 @@ const login = async (req, res, next) => {
         .json({ status: "fail", message: "invalid email or password" });
     }
 
-    const cleanData = toPublicData(userData, ["__v", "_id", "updatedAt"], true);
+    const cleanData = toPublicData(
+      userData,
+      ["password", "__v", "_id", "updatedAt"],
+      true,
+    );
 
     if (!(await compareHash(req.valid.body.password, userData.password))) {
       return res.status(400).json({

@@ -1,16 +1,17 @@
 const { User } = require("../../database/database.js");
 const toPublicData = require("../../utilities/toPublicData.js");
-const { pwToHash } = require("../../utilities/password.js");
+const { pwToHash, compareHash } = require("../../utilities/password.js");
 
 const resetPw = async (req, res, next) => {
   try {
     const sub = req.decoded.sub;
-    const oldPw = await User.getUserById(sub, true)?.password;
+    const oldDoc = await User.getUserById(sub, true)?.password;
+    const oldPw = oldDoc?.password;
     const oldPassword = req.valid.body.oldPassword;
     const newPassword = req.valid.body.newPassword;
     const confirmPassword = req.valid.body.confirmPassword;
 
-    if (oldPassword !== oldPw) {
+    if (!oldDoc || !(await compareHash(oldPassword, oldPw))) {
       return res
         .status(400)
         .json({ status: "fail", message: "Old Password is wrong." });

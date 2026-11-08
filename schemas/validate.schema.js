@@ -15,7 +15,7 @@ const schemas = {
   }),
   login: z.strictObject({
     email: emailField,
-    password: z.string({ message: "password is required" }).min(8),
+    password: z.string({ message: "password is required" }).min(8).trim(),
   }),
   changeEmail: z.strictObject({
     newEmail: emailField,

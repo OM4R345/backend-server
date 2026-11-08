@@ -1,5 +1,4 @@
 const { z } = require("zod");
-const mongodbUri = require("./zod.mongo-uri");
 
 const port = z.coerce
   .number({ message: "Port must be a number" })
@@ -25,9 +24,15 @@ const ownerAvatar = z.string({
   message: "Owner Avatar Photo is required to run server",
 });
 
+const mongodbUriMsg = "MONGODB_URI is required";
+const mongodbUri = z
+  .string({ message: mongodbUriMsg })
+  .trim()
+  .min(1, mongodbUriMsg);
+
 const envSchema = z.object({
-  MONGODB_URI: mongodbUri,
   PORT: port,
+  MONGODB_URI: mongodbUri,
   OWNER_NAME: ownerName,
   OWNER_AGE: ownerAge,
   OWNER_EMAIL: ownerEmail,

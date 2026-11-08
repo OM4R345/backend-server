@@ -23,7 +23,7 @@ const passwordField = z
   .string({ message: "password is required" })
   .trim()
   .min(8, "password is too short")
-  .max(72, "password is too long")
+  .refine((v) => Buffer.byteLength(v, "utf8") <= 72, "password is too long")
   .regex(/[a-z]/, "add a lowercase letter")
   .regex(/[A-Z]/, "add an uppercase letter")
   .regex(/\d/, "add a number")

@@ -1,8 +1,9 @@
 const missingParams = require("../errorHandle/err.missingParams");
 const toPublicData = (userData, filter, exclude = false) => {
   if (!userData || !filter) {
-    const msg = missingParams({ userData, filter });
-    throw new Error(`Destructor fn: ${msg} required.`);
+    throw new Error(
+      `Destructor fn: ${missingParams({ userData, filter })} required.`,
+    );
   }
 
   const objectData = userData.toObject ? userData.toObject() : userData;

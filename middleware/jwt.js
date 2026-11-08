@@ -44,7 +44,7 @@ const signToken = async (data, privateKey, options) => {
 
   if (!data || !privateKey) {
     throw new Error(
-      `${missingParams({ data, privateKey })} is required for signing token`,
+      `${missingParams({ data, privateKey })} required for signing token`,
     );
   }
 

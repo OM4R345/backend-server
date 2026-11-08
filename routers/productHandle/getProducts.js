@@ -1,4 +1,4 @@
-const { Product } = require("../database/database.js");
+const { Product } = require("../../database/database.js");
 
 const getProducts = async (req, res, next) => {
   try {

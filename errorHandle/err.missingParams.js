@@ -10,7 +10,7 @@ const missingParams = function (params) {
       ? missing[0]
       : `${missing.slice(0, -1).join(", ")} and ${missing.at(-1)}`;
 
-  return `${names} ${missing.length === 1 ? "is" : "are"} required`;
+  return `${names} ${missing.length === 1 ? "is" : "are"}`;
 };
 
 module.exports = missingParams;

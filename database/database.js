@@ -7,15 +7,17 @@ const Product =
   mongoose.models.Product || mongoose.model("Product", productModel);
 
 const openConnection = () => {
-  mongoose
-    .connect(process.env.MONGODB_URI)
-    .then(console.log("Database is Connected"));
+  return mongoose.connect(process.env.MONGODB_URI).then(
+    () => console.log("Database is Connected"),
+    () => console.log("Database connection is failed."),
+  );
 };
 
 const closeConnection = () => {
-  mongoose.connection.close(false).then(() => {
-    console.log("Database is Disconnected");
-  });
+  return mongoose.connection.close(false).then(
+    () => console.log("Database is Disconnected"),
+    () => console.log("Database disconnection is failed."),
+  );
 };
 
 module.exports = {

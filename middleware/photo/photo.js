@@ -73,10 +73,7 @@ const upload = (() => {
 })();
 
 const genPhotoName = (file) => {
-  if (!file)
-    return res
-      .status(400)
-      .json({ status: "fail", error: "avatar file is required." });
+  if (!file) throw new Error("avatar file is required.");
   return `avatar-${Date.now()}-${crypto.randomUUID()}.${file.ext}`;
 };
 

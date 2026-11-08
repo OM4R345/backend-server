@@ -60,9 +60,7 @@ userModel.statics.searchUser = async function (filter) {
 };
 
 userModel.statics.getAllUsers = async function () {
-  const data = await this.find({})
-    .lean()
-    .select("-password", "-__v", "-updatedAt");
+  const data = await this.find({}).lean().select("-password -__v -updatedAt");
   return data;
 };
 
@@ -89,9 +87,7 @@ userModel.statics.setDataById = async function (
   returnNewDoc = true,
 ) {
   if (!data || !userId) {
-    throw new Error(
-      `${missingParams({ data, userId })} is required to set data.`,
-    );
+    throw new Error(`${missingParams({ data, userId })} required to set data.`);
   }
   if (!mongoose.isValidObjectId(userId)) {
     throw new Error("mongoose: user objectId is invalid");
