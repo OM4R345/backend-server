@@ -21,7 +21,7 @@ const deleteUser = (self = true) => {
             .json({ status: "fail", message: "you can't delete onother user" });
 
         action = await User.searchUser({ _id: req.decoded.sub });
-        if (action.avatar && !defaultAvatars.has(action.avatar)) {
+        if (action && !defaultAvatars.has(action.avatar)) {
           setTimeout(await User.deleteUserById(req.decoded.sub), 3000).unref();
         } else {
           return res
@@ -34,12 +34,14 @@ const deleteUser = (self = true) => {
             .status(400)
             .json({ status: "fail", message: "you can't delete yourself" });
 
-        action = await User.deleteUserById(req.decoded.sub);
+        action = await User.deleteUser({ email });
 
-        if (action.avatar && !defaultAvatars.has(action.avatar)) {
+        if (action) { 
+         if(action.avatar && !defaultAvatars.has(action.avatar)) {
           rm(
             path.join(__dirname, "../../photos", path.basename(action.avatar)),
           ).catch((err) => next(err));
+         }
         } else {
           return res
             .status(404)
