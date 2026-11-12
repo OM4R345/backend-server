@@ -14,16 +14,7 @@ const genKeys = () => {
       format: "pem",
     },
   });
-
-  fs.writeFileSync(path.join(__dirname, "/public.pem"), publicKey);
-  fs.writeFileSync(path.join(__dirname, "/private.pem"), privateKey);
-
-  const epPath = "../endpoint-server/public.pem";
-  if (fs.existsSync(path.dirname(path.join(__dirname, epPath)))) {
-    fs.writeFileSync(path.join(__dirname, epPath), publicKey);
-  }
-
-  return publicKey;
+  return { publicKey, privateKey };
 };
 
 module.exports = genKeys;

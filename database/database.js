@@ -8,27 +8,27 @@ const Product =
 
 const openConnection = () => {
   return mongoose.connect(process.env.MONGODB_URI).then(
-     (err) => { 
+    (err) => {
       console.log("Database is connected.");
-      throw err
-      },
+      throw err;
+    },
     (err) => {
       console.log("Database connected is failed.");
-      throw err
-      },
+      throw err;
+    },
   );
 };
 
 const closeConnection = () => {
   return mongoose.connection.close(false).then(
-    (err) => { 
+    (err) => {
       console.log("Database is disconnected.");
-      throw err
-      },
+      throw err;
+    },
     (err) => {
       console.log("Database disconnected is failed.");
-      throw err
-      },
+      throw err;
+    },
   );
 };
 
