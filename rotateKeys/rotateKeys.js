@@ -8,12 +8,17 @@ const kid = newKid();
 const wk_secret = process.env.WK_SECRET;
 const sig = crypto
   .createHmac("sha256", wk_secret)
-  .update(`${ts}.${body}`)
+  .update(`${ts}.${publicKey}`)
   .digest("hex");
 
-sendPublicKey("http://localhost:4000", publicKey, kid, {
-  "x-sig": sig,
-  "x-ts": ts,
-});
+const data = await sendPublicKey(
+  "http://localhost:4000",
+  publicKey,
+  { kid, alg: "RS256", kty: "RSA", use: "sig" },
+  { "x-sig": sig, "x-ts": ts },
+);
 
-savePrivateKey(privateKey, kid, { deleteOld: true, timeout: 10 * 60 * 1000 });
+const saved = savePrivateKey(privateKey, kid, {
+  deleteOld: true,
+  timeout: 10 * 60 * 1000,
+});

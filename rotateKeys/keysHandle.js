@@ -3,15 +3,22 @@ const { readdir, rm } = require("fs/promises");
 const { pipeline } = require("stream/promises");
 const missingParams = require("../errorHandle/err.missingParams");
 
-const sendPublicKey = async (url, publicKey, kid, headers) => {
-  if (!url || !publicKey || !newVersion || !headers) {
-    throw new Error(missingParams({ url, publicKey, kid, headers }));
+const sendPublicKey = async (
+  url,
+  publicKey,
+  keyData = { kid, kty, alg, use },
+  headers,
+) => {
+  if (!url || !publicKey || !keyData || !headers) {
+    throw new Error(
+      `${missingParams({ url, publicKey, kid, headers })} required.`,
+    );
   }
 
-  return fetch(url, {
+  return await fetch(url, {
     headers: headers,
     method: "POST",
-    body: JSON.stringify({ publicKey, kid }),
+    body: JSON.stringify({ publicKey, kid, kty, alg, use }),
   }).then((data) => data.json());
 };
 
@@ -21,7 +28,7 @@ const savePrivateKey = async (
   { deleteOld = false, timeout = 0 },
 ) => {
   if (!privateKey || !filename) {
-    throw new Error(missingParams({ privateKey, filename }));
+    throw new Error(`${missingParams({ privateKey, filename })} required.`);
   }
 
   const keysPath = path.join(__dirname, "..", "keys");
