@@ -2,16 +2,6 @@ const schemas = require("../schemas/validate.schema");
 const organizer = require("../utilities/organizer");
 const TARGETS = new Set(["body", "query", "params"]);
 
-/**
- * @typedef {"body" | "query" | "params"} ValidationTarget
- * @typedef {keyof typeof schemas} SchemaName
- * @typedef {[ValidationTarget, SchemaName]} ValidationPair
- */
-
-/**
- * @param {...ValidationPair} pairs - one or more `[target, schemaName]` pairs,
- * @returns {import("express").RequestHandler}
- */
 const validate = (...pairs) => {
   if (pairs.length === 0) {
     throw new Error(
@@ -20,7 +10,6 @@ const validate = (...pairs) => {
   }
 
   const seen = new Set();
-  /** @type {Array<[ValidationTarget, import("zod").ZodType]>} */
   const resolved = [];
 
   for (const pair of pairs) {

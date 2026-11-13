@@ -12,7 +12,7 @@ const sig = crypto
   .digest("hex");
 
 const data = await sendPublicKey(
-  "http://localhost:4000",
+  "http://localhost:4000/rotateKey",
   publicKey,
   { kid, alg: "RS256", kty: "RSA", use: "sig" },
   { "x-sig": sig, "x-ts": ts },

@@ -18,7 +18,7 @@ const sendPublicKey = async (
   return await fetch(url, {
     headers: headers,
     method: "POST",
-    body: JSON.stringify({ publicKey, kid, kty, alg, use }),
+    body: { publicKey, kid, kty, alg, use },
   }).then((data) => data.json());
 };
 
