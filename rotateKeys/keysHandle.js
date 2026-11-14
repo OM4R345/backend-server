@@ -1,25 +1,65 @@
-const path = require("path");
+const crypto = require("crypto");
+const { join } = require("path");
 const { readdir, rm } = require("fs/promises");
-const { pipeline } = require("stream/promises");
+const { writeFile } = require("fs/promises");
 const missingParams = require("../errorHandle/err.missingParams");
+const serializor = require("./serializor");
 
 const sendPublicKey = async (
   url,
   publicKey,
+  secret,
   keyData = { kid, kty, alg, use },
-  headers,
+  rawBody = { body, headers },
 ) => {
-  if (!url || !publicKey || !keyData || !headers) {
+  if (!url || !publicKey || !secret || !keyData) {
     throw new Error(
-      `${missingParams({ url, publicKey, kid, headers })} required.`,
+      `${missingParams({ url, publicKey, secret, ...keyData })} required.`,
     );
   }
+  const { kid, kty, alg, use } = keyData;
+  if (!rawBody) throw new Error("rawBody param is required.");
+  let _headers, _body;
+  if (rawBody === true) {
+    ts = Date.now();
+    sig = crypto
+      .createHmac("sha256", secret)
+      .update(`${publicKey}.${kid}.${kty}.${alg}.${use}.${ts} }`)
+      .digest("hex");
+
+    _headers = {
+      "x-sig": sig,
+      "x-ts": ts,
+      "x-order": "publicKey.kid.kty.alg.use.ts",
+    };
+    _body = {
+      publicKey,
+      kid,
+      kty,
+      alg,
+      use,
+    };
+  }
+
+  const { body, headers } =
+    rawBody && rawBody !== true ? rawBody : { _body, _headers };
 
   return await fetch(url, {
     headers: headers,
     method: "POST",
-    body: { publicKey, kid, kty, alg, use },
+    body: JSON.stringify(body),
   }).then((data) => data.json());
+};
+
+const retiredVersions = async (deleteNew = false) => {
+  const dir = await readdir(join(__dirname, "..", "keys"));
+  const listOfVersions = dir.filter((name) => Number(name.match(/-\d+/)?.[0]));
+
+  const sorted = listOfVersions.sort((a, b) =>
+    a.localeCompare(b, undefined, { numeric: true }),
+  );
+  if (deleteNew) sorted.pop();
+  return sorted;
 };
 
 const savePrivateKey = async (
@@ -31,29 +71,35 @@ const savePrivateKey = async (
     throw new Error(`${missingParams({ privateKey, filename })} required.`);
   }
 
-  const keysPath = path.join(__dirname, "..", "keys");
+  const keysPath = join(__dirname, "..", "keys");
   if (deleteOld) {
-    const oldV =
-      filename.match(/^private-key-v\d+\.pem/)?.length === (1)?.[0] - 1;
-    const oldName = `private-key-v${oldV}.pem`;
-    const cb = () => {
-      return rm(path.join(keysPath, oldName));
+    const oldVersions = await retiredVersions(true);
+
+    const cb = async () => {
+      return await Promise.all(
+        oldVersions.map(
+          async (v) =>
+            await rm(join(keysPath, v), { force: true }).catch((err) => {
+              throw new Error(err.message);
+            }),
+        ),
+      );
     };
     if (timeout && !isNaN(timeout)) {
-      cb();
-    } else {
       setTimeout(cb(), timeout);
+    } else {
+      cb();
     }
   }
 
-  return pipeline(privateKey, path.join(keysPath, filename));
+  return await writeFile(join(keysPath, filename), privateKey, {
+    flag: "wx",
+  });
 };
 
 const newKid = async () => {
-  const dir = await readdir(path.join(__dirname, "..", "keys"));
-  const lastFilename = dir.filter((n) => /^private-key-v\d+\.pem/.test(n));
-  const version = Number(lastFilename.match(/\d+/)?.length === (1)?.[0]);
-  return `private-key-v${version + 1}.pem`;
+  const versions = await retiredVersions();
+  return `private-key-v${versions.at(-1) + 1}.pem`;
 };
 
 module.exports = {
