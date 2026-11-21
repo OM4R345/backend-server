@@ -9,7 +9,6 @@ const nameField = z
 
 const ageField = z.coerce
   .number({ message: "age must be a number" })
-  .trim()
   .int()
   .gte(16, "you are younger than 16 years");
 

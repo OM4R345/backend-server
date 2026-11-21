@@ -1,12 +1,12 @@
 const { User } = require("../../database/database.js");
 const toPublicData = require("../../utilities/toPublicData.js");
 const { signToken } = require("../../middleware/jwt.js");
-const fs = require("node:fs");
-const privateKey = fs.readFileSync("./private.pem", "utf-8");
+const getKey = require("../../rotateKeys/getKey.js");
 const { compareHash } = require("../../utilities/password.js");
 
 const login = async (req, res, next) => {
   try {
+    const privateKey = getKey("private", { cache: true, ttl: 60 * 1000 });
     const userData = req.userData
       ? req.userData
       : await User.getUser(req.valid.body.email, true);

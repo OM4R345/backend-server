@@ -9,7 +9,7 @@ const createdOwner = async () => {
     if (!ownerExists) {
       await User.create({
         name: process.env.OWNER_NAME,
-        age: process.env.OWNER_AGE,
+        age: Number(process.env.OWNER_AGE),
         email: ownerEmail,
         password: await pwToHash(process.env.OWNER_PASSWORD),
         role: "owner",

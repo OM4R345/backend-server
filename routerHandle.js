@@ -5,7 +5,7 @@ const {
   parseFormData,
   photoMimetype,
   getAvatar,
-} = require("./middleware/photo/photo.js");
+} = require("./middleware/photo");
 const {
   login,
   signUp,

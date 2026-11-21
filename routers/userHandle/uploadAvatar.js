@@ -1,5 +1,8 @@
 const { User } = require("../../database/database.js");
-const { genPhotoName, saveOnDisk } = require("../../middleware/photo/photo.js");
+const {
+  genPhotoName,
+  saveOnDisk,
+} = require("../../middleware/photo/upload.js");
 
 const uploadAvatar = (single = true) => {
   return async (req, res, next) => {

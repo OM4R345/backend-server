@@ -1,7 +1,7 @@
 const { User } = require("../../database/database.js");
 const toPublicData = require("../../utilities/toPublicData.js");
 const path = require("node:path");
-const { removePhoto } = require("../../middleware/photo/photo.js");
+const { removePhoto } = require("../../middleware/photo/upload.js");
 
 const deleteUser = (self = true) => {
   return async (req, res, next) => {
@@ -37,10 +37,10 @@ const deleteUser = (self = true) => {
 
         action = await User.deleteUser({ email });
 
-        if (action) { 
-         if(action.avatar && !defaultAvatars.has(action.avatar)) {
-          removePhoto(action.avatar);
-         }
+        if (action) {
+          if (action.avatar && !defaultAvatars.has(action.avatar)) {
+            removePhoto(action.avatar);
+          }
         } else {
           return res
             .status(404)

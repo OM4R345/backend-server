@@ -1,33 +1,52 @@
-const genKeys = require("../utilities/genKeys");
-const { savePrivateKey, sendPublicKey, newKid } = require("./keysHandle");
-const { rm } = require("fs/promises");
-const path = require("path");
-
-const { privateKey, publicKey } = genKeys();
-const kid = await newKid();
-const wk_secret = process.env.WK_SECRET;
+const { saveKey, newKid, genKeys } = require("./keysHandler");
+const timeConverter = require("../utilities/time/timeConverter");
 
 const rotateKeys = async () => {
-  const saved = await savePrivateKey(privateKey, kid, {
-    deleteOld: true,
-    timeout: 10 * 60 * 1000,
-  }).catch((err) => {
+  const { privateKey, publicKey } = genKeys();
+  const [kid, Vd] = await newKid();
+
+  const sharedMetadata = {
+    kty: "RSA",
+    alg: "RS256",
+    ext: "pem",
+    version: Vd,
+    kid: kid,
+    modulusLength: 2048,
+    createdAt: new Date().toISOString(),
+    status: "active",
+  };
+
+  const privateMetadata = {
+    type: "private",
+    ...sharedMetadata,
+  };
+  const publicMetadata = {
+    type: "public",
+    ...sharedMetadata,
+  };
+
+  const savePrivateKey = await saveKey(
+    privateKey,
+    privateMetadata,
+    timeConverter("20s"),
+  ).catch((err) => {
     throw new Error(err.message);
   });
 
-  const data = await sendPublicKey(
-    "http://localhost:4000/rotateKey",
+  const savePublicKey = await saveKey(
     publicKey,
-    wk_secret,
-    { kid, alg: "RS256", kty: "RSA", use: "sig" },
-    true,
-  ).catch((err) => async () => {
-    return (async () => {
-      await rm(path.join(__dirname, "..", "keys", kid), { force: true });
-      throw err;
-    })();
+    publicMetadata,
+    timeConverter("1m"),
+  ).catch((err) => {
+    throw new Error(err.message);
   });
-  return { saved, data };
+
+  const _process = await Promise.allSettled([savePrivateKey, savePublicKey]);
+  const status = _process.filter((key) => key.status === "fulfilled");
+  return status;
 };
 
+(async () => {
+  await rotateKeys();
+})();
 module.exports = rotateKeys;

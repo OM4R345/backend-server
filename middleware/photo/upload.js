@@ -1,8 +1,4 @@
 const multer = require("multer");
-const crypto = require("crypto");
-const path = require("node:path");
-const fsPromises = require("node:fs/promises");
-const fs = require("node:fs");
 const ALLOWED = new Map([
   ["image/jpeg", "jpg"],
   ["image/png", "png"],
@@ -72,34 +68,4 @@ const upload = (() => {
   return new uploader();
 })();
 
-const genPhotoName = (file) => {
-  if (!file) throw new Error("avatar file is required.");
-  return `avatar-${Date.now()}-${crypto.randomUUID()}.${file.ext}`;
-};
-
-const saveOnDisk = (file, filename) => {
-  if (!file) {
-    return "default-avatar.webp";
-  }
-  if (file && !filename) {
-    throw new Error("saveOnDisk: filename is required");
-  }
-  const savePath = path.join(__dirname, "../../photos", filename);
-  return fsPromises.writeFile(savePath, file.buffer);
-};
-
-//collect all functions
-const getAvatar = require("./getAvatar.js");
-const parseFormData = require("./parseFormData.js");
-const photoMimetype = require("./photoMimetype.js");
-const removePhoto = require("./removePhoto.js");
-
-module.exports = {
-  upload,
-  removePhoto,
-  genPhotoName,
-  saveOnDisk,
-  getAvatar,
-  parseFormData,
-  photoMimetype,
-};
+module.exports = upload;
