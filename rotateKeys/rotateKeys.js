@@ -13,7 +13,6 @@ const rotateKeys = async () => {
     kid: kid,
     modulusLength: 2048,
     createdAt: new Date().toISOString(),
-    status: "active",
   };
 
   const privateMetadata = {
@@ -25,14 +24,6 @@ const rotateKeys = async () => {
     ...sharedMetadata,
   };
 
-  const savePrivateKey = await saveKey(
-    privateKey,
-    privateMetadata,
-    timeConverter("20s"),
-  ).catch((err) => {
-    throw new Error(err.message);
-  });
-
   const savePublicKey = await saveKey(
     publicKey,
     publicMetadata,
@@ -41,12 +32,14 @@ const rotateKeys = async () => {
     throw new Error(err.message);
   });
 
-  const _process = await Promise.allSettled([savePrivateKey, savePublicKey]);
-  const status = _process.filter((key) => key.status === "fulfilled");
-  return status;
+  if (!savePublicKey) throw new Error("Rotation failed.");
+  const savePrivateKey = await saveKey(
+    privateKey,
+    privateMetadata,
+    timeConverter("20s"),
+  ).catch((err) => {
+    throw new Error(err.message);
+  });
 };
 
-(async () => {
-  await rotateKeys();
-})();
 module.exports = rotateKeys;

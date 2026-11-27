@@ -1,7 +1,7 @@
 const { readFile } = require("node:fs/promises");
 const { join } = require("node:path");
 const retiredVersions = require("./keysHandler/retiredVersions");
-const map = new Map();
+const keyCache = new Map();
 
 const readKey = async (path) => {
   return await readFile(path, "utf-8").catch((err) => {
@@ -17,8 +17,8 @@ const getKey = async (type, metadata = false, options = { ttl: 60 * 1000 }) => {
   const _dir = type
     .toLowerCase()
     .trim()
-    .match(/^(private|public)$/)[0];
-  const versions = await retiredVersions(type);
+    .match(/^(private|public)$/)?.[0];
+  const versions = await retiredVersions(_dir);
   const newest = versions?.at(-1);
   const ext = metadata ? "json" : "pem";
   const _type = metadata ? "metadata" : _dir;
@@ -27,20 +27,17 @@ const getKey = async (type, metadata = false, options = { ttl: 60 * 1000 }) => {
   const filePath = join(__dirname, "../../keys", _dir, `v${newest}`, name);
 
   if (options && Number.isFinite(ttl) && ttl > 0 && !metadata) {
-    if (!map.get(name)) {
-      map.set(name, await readKey(filePath));
-      const timer = setTimeout(() => map.delete(name), ttl).unref();
-      return map.get(name);
+    if (!keyCache.has(name)) {
+      const readedKey = await readKey(filePath);
+      keyCache.set(name, readedKey);
+      const timer = setTimeout(() => keyCache.delete(name), ttl).unref();
+      return readedKey;
     } else {
-      return map.get(name);
+      return keyCache.get(name);
     }
   }
 
   return await readKey(filePath);
 };
 
-(async () => {
-  const type = "public";
-  console.log(await getKey(type, false, false));
-})();
 module.exports = getKey;
